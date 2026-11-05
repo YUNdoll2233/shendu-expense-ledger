@@ -582,7 +582,7 @@ function updateAdditionTypeFields() {
   const type = $('#additionTypeInput')?.value || 'quarterly';
   $('#quarterFields').hidden = type !== 'quarterly';
   $('#refundFields').hidden = type !== 'refund';
-  $('#reasonFields').hidden = type !== 'quarterly' && type !== 'refund';
+  $('#reasonFields').hidden = type !== 'other';
   const reasonLabel = $('#reasonFields label');
   if (reasonLabel) reasonLabel.textContent = '增加事项及原因 *';
 }
