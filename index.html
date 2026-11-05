@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src https://api.github.com; frame-src blob:; object-src blob:; base-uri 'self'; form-action 'self'">
+  <meta name="description" content="深度数科集团中心费用台账系统">
+  <title>深度数科 · 中心费用台账</title>
+  <link rel="icon" href="assets/shendu-logo.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div id="connectionScreen" class="connection-screen">
+    <div class="connection-card">
+      <div class="connection-brand"><img src="assets/shendu-logo.png" alt="深度数科集团"></div>
+      <div class="eyebrow">EXPENSE MANAGEMENT</div>
+      <h1>中心费用台账系统</h1>
+      <p class="muted">连接你的 GitHub 私有数据仓库，开始管理三个中心的费用。</p>
+      <div class="notice notice-warn">
+        <strong>先使用演示数据</strong>
+        <span>首次建议初始化演示账本。未经公司批准，请不要上传真实付款截图、发票或其他敏感资料。</span>
+      </div>
+      <div class="notice notice-danger">
+        <strong>重要安全提示</strong>
+        <span>GitHub Pages 是公开网页托管服务，GitHub 官方提示不应使用 Pages 处理密码等敏感事务。本版本会在网页内存中使用你输入的 GitHub 令牌，页面脚本可以访问它；同时，账本 JSON 和附件当前以明文保存在 GitHub 私有仓库，不做客户端加密。因此当前只建议连接测试私有仓库、使用虚拟数据。正式账本启用前，必须完成代码审查及公司信息安全审批，并确认公司允许明文资料存储在 GitHub 私有仓库。</span>
+      </div>
+      <form id="connectForm" class="form-stack" autocomplete="off">
+        <div class="field">
+          <label for="repoOwner">GitHub 用户名</label>
+          <input id="repoOwner" name="repoOwner" placeholder="例如：your-github-name" required spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="repoName">私有数据仓库名称</label>
+          <input id="repoName" name="repoName" placeholder="例如：shendu-expense-data" required spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="repoBranch">分支名称</label>
+          <input id="repoBranch" name="repoBranch" value="main" required spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="githubToken">GitHub 细粒度访问令牌</label>
+          <input id="githubToken" name="githubToken" type="password" placeholder="github_pat_…" required autocomplete="new-password" spellcheck="false">
+          <small>令牌仅在当前网页内存中使用，刷新或关闭网页后需要重新输入；不会保存到网站代码或浏览器本地存储。</small>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="connectButton">连接私有仓库 <span aria-hidden="true">→</span></button>
+      </form>
+      <div id="connectError" class="form-error" role="alert" hidden></div>
+      <details class="setup-help">
+        <summary>不知道怎么创建令牌？查看操作说明</summary>
+        <ol>
+          <li>先在 GitHub 创建一个<strong>私有仓库</strong>，建议命名为 <code>shendu-expense-data</code>。</li>
+          <li>打开 GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens。</li>
+          <li>创建令牌时，只选择刚才创建的费用数据仓库。</li>
+          <li>Repository permissions 中将 <strong>Contents</strong> 设置为 <strong>Read and write</strong>；其他权限保持 No access。</li>
+          <li>设置有效期，创建后复制令牌，粘贴到上方。令牌只显示一次，请自行妥善保管。</li>
+        </ol>
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">打开 GitHub 令牌创建页面 ↗</a>
+      </details>
+      <div class="security-footnote">纯 GitHub 方案 · 无传统数据库 · 无第三方后端 · 单人管理</div>
+    </div>
+  </div>
+
+  <div id="appShell" class="app-shell" hidden>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand"><img src="assets/shendu-logo.png" alt="深度数科集团"></div>
+      <div class="sidebar-caption">费用管理工作台</div>
+      <nav class="main-nav" aria-label="主导航">
+        <button class="nav-item active" data-page="dashboard"><span class="nav-icon">▦</span>费用总览</button>
+        <button class="nav-item" data-page="expenses"><span class="nav-icon">▤</span>支出记录</button>
+        <button class="nav-item" data-page="additions"><span class="nav-icon">＋</span>费用增加</button>
+        <button class="nav-item" data-page="ledger"><span class="nav-icon">≡</span>资金流水</button>
+        <button class="nav-item" data-page="reports"><span class="nav-icon">▥</span>统计报表</button>
+        <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span>系统管理</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="connection-pill"><span class="status-dot"></span><span id="sidebarConnection">未连接</span></div>
+        <div class="sidebar-user"><span class="avatar">管</span><span><strong>超级管理员</strong><small>个人管理模式</small></span></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="打开导航">☰</button>
+        <div class="breadcrumb"><span>深度数科</span><i>/</i><strong id="breadcrumbCurrent">费用总览</strong></div>
+        <div class="topbar-right">
+          <span id="environmentBadge" class="environment-badge demo">演示账本</span>
+          <button class="icon-button" id="refreshButton" title="刷新数据" aria-label="刷新数据">↻</button>
+          <button class="top-connect" id="topConnectionButton">GitHub 已连接</button>
+        </div>
+      </header>
+      <div class="page-content">
+        <div id="globalNotice" class="global-notice" hidden></div>
+        <section id="page-dashboard" class="page active"></section>
+        <section id="page-expenses" class="page"></section>
+        <section id="page-additions" class="page"></section>
+        <section id="page-ledger" class="page"></section>
+        <section id="page-reports" class="page"></section>
+        <section id="page-settings" class="page"></section>
+      </div>
+      <footer class="app-footer"><span>SHENDU DIGITAL · 中心费用台账</span><span>账目数据保存在你的 GitHub 私有仓库</span></footer>
+    </main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div id="toastRoot" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
